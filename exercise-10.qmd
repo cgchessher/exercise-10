@@ -1,0 +1,75 @@
+---
+title: "exercise-10"
+format: html
+editor: visual
+---
+
+## Exercise 10
+
+### Read in your file
+
+```{r}
+library(tidyverse)
+library(dplyr)
+library(skimr)
+f <- "https://raw.githubusercontent.com/difiore/ada-datasets/refs/heads/main/AVONETdataset1.csv"
+d<-read_csv(f, col_names = TRUE)
+
+
+d <- d |> select(Species1, Family1, Order1, Beak.Length_Culmen, Beak.Width, Beak.Depth,Tarsus.Length, Wing.Length, Tail.Length, Mass, Habitat, Migration, Trophic.Level, Trophic.Niche, Range.Size, Primary.Lifestyle, Min.Latitude, Max.Latitude, Centroid.Latitude, Centroid.Longitude)
+
+# EXPLORING
+
+skim(d)
+
+
+```
+
+Only species, family, order, habitat, trophic level/niche, primary lifestyle are categorical (so is migration but it's numerically coded), and the rest are numeric.
+
+### Step 1 
+
+-   Make boxplots of log(**Mass**) in relation to **Trophic.Level** and **Migration** behavior type. For each plot, drop from the visualization all species records where the categorical variable of interest is missing from the dataset. Also, you will want to convert the variable **Migration**(which is scored as a number: “1”, “2”, or “3”) from class numeric to either being classified as a factor or as a character (string) variable.
+
+```{r}
+p1 <- ggplot(data = d |> drop_na(Trophic.Level),
+    aes(x = Trophic.Level, y = log(Mass))) + 
+    geom_boxplot() +
+    geom_jitter(alpha = 0.1)
+p1
+
+p2 <- ggplot(
+  data = d |>
+    mutate(Migration = factor(Migration,
+      levels = c(1, 2, 3),
+      labels = c("Sedentary", "Partially Migratory", "Fully Migratory")
+    )) |>
+    drop_na(Migration),
+  aes(x = Migration, y = log(Mass))
+) + 
+  geom_boxplot() +
+  geom_jitter(alpha = 0.1)
+
+p2
+
+```
+
+### Step 2
+
+-   Run linear models using the `lm()` function to look at the relationship between log(**Mass**) and **Trophic.Level** and between log(**Mass**) and **Migration**.
+
+-   Examine the output of the resultant linear models. Is log(**Mass**) associated with either **Trophic.Level** or **Migration** category? That is, in the global test of significance, is the F statistic large enough to reject the null hypothesis of an F value of zero?
+
+    -   Yes, both Herbivore and Scavenger are significantly different from the reference level, Carnivore in terms of log(mass). Additionally, categories of migratory birds are associated with log(Mass) (see details below).
+
+-   Given the regression coefficients returned for your **Migration** model, which **Migration** categor(ies) are different than the reference level? What level is the reference level? Relevel and assess differences among the remaining pair of **Migration** categories.
+
+    -   Both category 2 and 3 (partially and fully migratory birds) are significantly different from the reference (sedentary) birds in terms of log(Mass).
+
+```{r}
+m1 <- lm(log(d$Mass) ~ d$Trophic.Level)
+m2 <- lm(log(Mass) ~ factor(Migration), data = d)
+
+summary(m1)
+summary(m2)
+```
