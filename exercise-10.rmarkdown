@@ -4,9 +4,13 @@ format: html
 editor: visual
 ---
 
+
+
 ## Exercise 10
 
 ### Read in your file
+
+
 
 ```{r}
 library(tidyverse)
@@ -25,6 +29,8 @@ skim(d)
 
 ```
 
+
+
 Only species, family, order, habitat, trophic level/niche, primary lifestyle are categorical (so is migration but it's numerically coded), and the rest are numeric.
 
 ## CHALLENGE 1
@@ -32,6 +38,8 @@ Only species, family, order, habitat, trophic level/niche, primary lifestyle are
 ### Step 1
 
 -   Make boxplots of log(**Mass**) in relation to **Trophic.Level** and **Migration** behavior type. For each plot, drop from the visualization all species records where the categorical variable of interest is missing from the dataset. Also, you will want to convert the variable **Migration**(which is scored as a number: “1”, “2”, or “3”) from class numeric to either being classified as a factor or as a character (string) variable.
+
+
 
 ```{r}
 p1 <- ggplot(data = d |> drop_na(Trophic.Level),
@@ -56,6 +64,8 @@ p2
 
 ```
 
+
+
 ### Step 2
 
 -   Run linear models using the `lm()` function to look at the relationship between log(**Mass**) and **Trophic.Level** and between log(**Mass**) and **Migration**.
@@ -68,6 +78,8 @@ p2
 
     -   Both category 2 and 3 (partially and fully migratory birds) are significantly different from the reference (sedentary) birds in terms of log(Mass).
 
+
+
 ```{r}
 m1 <- lm(log(d$Mass) ~ d$Trophic.Level)
 m2 <- lm(log(Mass) ~ factor(Migration), data = d)
@@ -76,11 +88,15 @@ summary(m1)
 summary(m2)
 ```
 
+
+
 ### Step 3
 
 -   Conduct a post-hoc Tukey Honest Significant Differences test to also evaluate which **Migration** categories differ “significantly” from one another (see [**Module 20**](https://difiore.github.io/ada-2026/20-module.html)).
 
     -   Seems that according to p adj values, each category (2-1, 3-1, and 3-2) has a significantly difference (p val = 0.0).
+
+
 
 ```{r}
 
@@ -92,9 +108,13 @@ TukeyHSD(m1)
 TukeyHSD(m2)
 ```
 
+
+
 ### Step 4
 
 -   Use a permutation approach to inference to generate a null distribution of F statistic values for the model of log(**Mass**) in relation to **Trophic.Level** and calculate a p value for your original F statistic. You can do this either by programming your own permutation test (e.g., by shuffling values for the predictor or response variable among observations and calculating an F statistic for each replicate) or by using the {infer} workflow and setting `calculate(stat="F")`.
+
+
 
 ```{r}
 
@@ -126,6 +146,8 @@ p.value <- mean(permuted.F > original.F$statistic)
 p.value
 ```
 
+
+
 ## CHALLENGE 2
 
 ### Step 1
@@ -135,6 +157,8 @@ p.value
     -   **Relative beak length**, which you should calculate as the *residual* of log(**Beak.Length_Culmen**) on log(**Mass**).
 
     -   **Relative tarsus length**, which you should calculate as the *residual* of log(**Tarsus.Length**) on log(**Mass**).
+
+
 
 ```{r}
 m3 <- lm(log(d$Beak.Length_Culmen) ~ log(d$Mass))
@@ -147,9 +171,13 @@ d$relbeak <- m3$residuals
 d$reltarsus <- m4$residuals
 ```
 
+
+
 ### Step 2
 
 -   Make a boxplot or violin plot of your new relative tarsus length variable in relation to **Primary.Lifestyle** and of your new relative beak length variable in relation to **Trophic.Niche**
+
+
 
 ```{r}
 d <- d |> mutate(
@@ -183,6 +211,8 @@ library(cowplot)
 plot_grid(p3, p4)
 ```
 
+
+
 ### Step 3
 
 -   Run ANOVA analyses to look at the association between geographic range size and the variable **Migration**. You should first drop those observations for which **Migration** is not scored and also look at the distribution of the variable **Range.Size** to decide whether and how it might need to be transformed. Based on the global model, is range size associated with form of migration? How much of the variance in your measure of range size is associated with **Migration** behavior style?
@@ -192,6 +222,8 @@ plot_grid(p3, p4)
 -   Given the regression coefficients returned in the output of the model, which **Migration**categor(ies) are different than the reference level? What level is the reference level? Relevel and assess differences among the remaining pair of **Migration** categories. Also conduct a post-hoc Tukey Honest Significant Differences test to also evaluate which **Migration**categories differ “significantly” from one another (see [**Module 20**](https://difiore.github.io/ada-2026/20-module.html)).
 
     -   Using lm(), each level (migratory or not) seems to differ significantly from the reference level (sedentary). In the Tukey's post-hoc, each pairwise comparison of levels differed significantly from one another.
+
+
 
 ```{r}
 p1 <- ggplot(data = d |> drop_na(Trophic.Level),
@@ -258,6 +290,8 @@ summary(m5releveled)
 TukeyHSD(m5releveled)
 ```
 
+
+
 ### Step 4
 
 -   Winnow your original data to just consider birds from the Infraorder “Passeriformes” (song birds).
@@ -280,6 +314,8 @@ TukeyHSD(m5releveled)
 
             Indicating that data point categorized within these niche types significantly explain variation in beak length in the dataset. 
             ```
+
+
 
 ```{r}
 
@@ -329,11 +365,15 @@ summary(lm1)
 summary(lm2)
 ```
 
+
+
 ### Step 5
 
 -   Run a two-factor model to look at the association between relative beak length and both **Primary.Lifestyle** and **Trophic.Level** among the passeriforms. Based on the model output, what would you conclude about how relative beak length is related to these two variables?
 
     -   Relative beak length is significantly explained by each variable independent of one another.
+
+
 
 ```{r}
 
@@ -345,11 +385,15 @@ summary(aov3)
 
 ```
 
+
+
 ### Step 6
 
 -   Finally, run an additional two-way model with the same dataset and predictors, but adding the possibility of an interaction term. To do this, you should modify your model formula using the colon operator (`:`) to specify the interaction, e.g., relative beak length \~ **Primary.Lifestyle** + **Trophic.Level** + **Primary.Lifestyle:Trophic.Level**. Based on the model output, what would you now conclude about how relative beak length is related to these two variables?
 
     -   Relative beak length is significantly explained not only by each variable independently, but by the interaction of Primary lifestyle and trophic level. This means that the impact of Trophic Level on relative beak size is different at various levels of Primary Lifestyle.
+
+
 
 ```{r}
 #now multiple anova with  interaction term
@@ -358,9 +402,13 @@ aov4 <- aov(dp$relbeak ~ dp$Primary.Lifestyle * dp$Trophic.Level)
 summary(aov4)
 ```
 
+
+
 ### Step 7
 
 -   Use the `interaction.plot()` and either the `plot_model()` or `emmip()` function to visualize the interaction between **Primary.Lifestyle** and **Trophic.Level**, based on both \[1\] the raw dataset and \[2\] your model that includes an interaction term (see [**Module 20**](https://difiore.github.io/ada-2026/20-module.html)).
+
+
 
 ```{r}
 
@@ -374,11 +422,15 @@ emmip(aov4, Trophic.Level ~ Primary.Lifestyle, CIs = TRUE)
 # if we plotted the marginal means for a model without significant interaction effects, the lines would be parallel.
 ```
 
+
+
 ### Step 8
 
 In the exercise above, we really did not do any checking with this dataset to see if the data meet the primary assumptions for standard linear regression and ANOVA, which are that variables/residuals within each grouping level are roughly normally distributed and have roughly equal variances. Sample sizes within each grouping level should also be roughly equal. As noted in [**Module 20**](https://difiore.github.io/ada-2026/20-module.html), a general rule of thumb for “equal” variances is to compare the largest and smallest within-grouping level standard deviations and, if this value is less than 2, then it is often reasonable to presume the assumption may not be violated.
 
 Use this approach to see whether variances in across groups in your various models (e.g., for **relative beak length \~ trophic level**) are roughly equal. Additionally, do a visual check of whether observations and model residuals within groups look to be normally distributed.
+
+
 
 ```{r}
 # check that variances are roughly equal (ratio of max/min is <2)
@@ -390,3 +442,4 @@ plot(
   xlab = "Trophic Level", ylab = "Relative Beak Length"
 )
 ```
+
